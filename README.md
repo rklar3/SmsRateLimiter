@@ -40,6 +40,8 @@ The service includes a web-based monitoring dashboard accessible at `http://loca
 - Message rate indicators
 - Detailed phone number search
 
+![SMS Rate Limiter Monitor](monitor.PNG)
+
 ### Monitoring Features
 
 1. **Account Overview**
@@ -108,3 +110,9 @@ dotnet test
 ## License
 
 MIT
+
+## Example Traffic Simulation Output
+
+When running the traffic simulation script, you'll see the monitoring dashboard update in real-time with active phone numbers and their message rates, as shown below:
+
+![SMS Rate Limiter Monitor](monitor.PNG)
