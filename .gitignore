@@ -1,0 +1,33 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+*.dll
+*.exe
+*.app
+*.log
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+
+# NuGet
+*.nupkg
+*.snupkg
+*.nuspec
+packages/
+*.cache
+*.config
+*.csproj.user
+
+# DotCover
+*.dcvr
+
+# Others
+_ReSharper*/
+*.DotSettings.user

@@ -1,0 +1,28 @@
+@SmsRateLimiter_HostAddress = http://localhost:5263
+
+###
+# Check the service status
+GET http://localhost:5263/api/sms/status
+
+###
+# Test rate limiting for a phone number
+POST http://localhost:5263/api/sms/check
+Content-Type: application/json
+
+{
+  "phoneNumber": "+12345678901",
+  "message": "Test SMS message",
+  "recipientNumber": "+19876543210"
+}
+
+###
+# Test rate limiting by making multiple requests quickly
+# Run this multiple times to see rate limiting in action
+POST http://localhost:5263/api/sms/check
+Content-Type: application/json
+
+{
+  "phoneNumber": "+12345678901",
+  "message": "Another test message",
+  "recipientNumber": "+19876543210"
+}

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SMS Rate Limiter Monitor</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>SMS Rate Limiter Monitor</h1>
+      </header>
+
+      <section class="card">
+        <h2>Account Overview</h2>
+        <div class="stats-grid" id="accountStats"></div>
+      </section>
+
+      <section class="card">
+        <h2>Active Phone Numbers</h2>
+        <div class="active-numbers">
+          <table id="activeNumbers">
+            <thead>
+              <tr>
+                <th>Phone Number</th>
+                <th>Messages This Second</th>
+                <th>Last Reset</th>
+                <th>Last Used</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Phone Number Details</h2>
+        <div class="search-box">
+          <input
+            type="text"
+            id="phoneSearch"
+            placeholder="Enter phone number"
+          />
+          <button id="searchButton">Search</button>
+        </div>
+        <div id="phoneStats"></div>
+      </section>
+    </div>
+
+    <script>
+      // DOM references
+      const accountStatsElement = document.getElementById("accountStats");
+      const activeNumbersTable = document.querySelector("#activeNumbers tbody");
+      const phoneSearchInput = document.getElementById("phoneSearch");
+      const searchButton = document.getElementById("searchButton");
+      const phoneStatsElement = document.getElementById("phoneStats");
+
+      // API endpoints
+      const API = {
+        stats: "/api/monitoring/stats",
+        activeNumbers: "/api/monitoring/active-numbers",
+        phoneDetails: (phone) =>
+          `/api/monitoring/phone/${encodeURIComponent(phone)}`,
+      };
+
+      // Initialize the app
+      function init() {
+        // Set up event listeners
+        searchButton.addEventListener("click", searchPhoneNumber);
+        phoneSearchInput.addEventListener("keyup", (e) => {
+          if (e.key === "Enter") searchPhoneNumber();
+        });
+
+        // Start polling for updates
+        updateStats();
+        setInterval(updateStats, 1000);
+      }
+
+      // Update dashboard statistics
+      async function updateStats() {
+        try {
+          const [stats, activeNumbers] = await Promise.all([
+            fetchJson(API.stats),
+            fetchJson(API.activeNumbers),
+          ]);
+
+          renderAccountStats(stats);
+          renderActiveNumbers(activeNumbers);
+        } catch (error) {
+          console.error("Failed to update stats:", error);
+        }
+      }
+
+      // Helper for fetching JSON data
+      async function fetchJson(url) {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status}`);
+        }
+        return response.json();
+      }
+
+      // Render account statistics
+      function renderAccountStats(stats) {
+        accountStatsElement.innerHTML = `
+          <div class="stat-item">
+            <div class="stat-value">${stats.totalMessages}</div>
+            <div class="stat-label">Messages This Second</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">${stats.accountLimit}</div>
+            <div class="stat-label">Account Limit</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">${stats.activePhoneNumbers}</div>
+            <div class="stat-label">Active Numbers</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">${formatTime(stats.lastReset)}</div>
+            <div class="stat-label">Last Reset</div>
+          </div>
+        `;
+      }
+
+      // Render active phone numbers
+      function renderActiveNumbers(numbers) {
+        activeNumbersTable.innerHTML = numbers
+          .map(
+            (number) => `
+            <tr>
+              <td>${number.phoneNumber}</td>
+              <td>
+                <span class="rate-indicator ${getRateClass(
+                  number.messagesPerSecond
+                )}"></span>
+                ${number.messagesPerSecond}
+              </td>
+              <td>${formatTime(number.lastReset)}</td>
+              <td>${formatTime(number.lastUsed)}</td>
+            </tr>
+          `
+          )
+          .join("");
+      }
+
+      // Search for a specific phone number
+      async function searchPhoneNumber() {
+        const phoneNumber = phoneSearchInput.value.trim();
+        if (!phoneNumber) return;
+
+        try {
+          const stats = await fetchJson(API.phoneDetails(phoneNumber));
+          renderPhoneStats(stats);
+        } catch (error) {
+          console.error("Failed to fetch phone stats:", error);
+          phoneStatsElement.innerHTML =
+            '<p class="error">Could not retrieve phone number data</p>';
+        }
+      }
+
+      // Render phone number statistics
+      function renderPhoneStats(stats) {
+        phoneStatsElement.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Phone Number</th>
+                <th>Messages Last Minute</th>
+                <th>Messages Last 5 Seconds</th>
+                <th>Last Used</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>${stats.phoneNumber}</td>
+                <td>
+                  <span class="rate-indicator ${getRateClass(
+                    stats.messagesLastMinute
+                  )}"></span>
+                  ${stats.messagesLastMinute}
+                </td>
+                <td>
+                  <span class="rate-indicator ${getRateClass(
+                    stats.messagesLast5Seconds
+                  )}"></span>
+                  ${stats.messagesLast5Seconds}
+                </td>
+                <td>${formatTime(stats.lastUsed)}</td>
+              </tr>
+            </tbody>
+          </table>
+        `;
+      }
+
+      // Helper to format time
+      function formatTime(timestamp) {
+        return new Date(timestamp).toLocaleTimeString();
+      }
+
+      // Helper to determine rate indicator class
+      function getRateClass(rate) {
+        if (rate === 0) return "rate-low";
+        if (rate < 3) return "rate-medium";
+        return "rate-high";
+      }
+
+      // Initialize the application
+      document.addEventListener("DOMContentLoaded", init);
+    </script>
+  </body>
+</html>
