@@ -35,15 +35,6 @@ The service can be configured through `appsettings.json`:
 
 The service includes a web-based monitoring dashboard accessible at `http://localhost:5263` (or your configured port). The dashboard provides:
 
-- Real-time account statistics
-- Active phone number monitoring
-- Message rate indicators
-- Detailed phone number search
-
-![SMS Rate Limiter Monitor](monitor.PNG)
-
-### Monitoring Features
-
 1. **Account Overview**
 
    - Total messages in current second
