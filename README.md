@@ -81,10 +81,15 @@ Features:
 ## Running the Service
 
 1. Start the .NET application:
-
+   
    ```bash
+   dotnet run 
+   
+   or
+
    dotnet run --project SmsRateLimiter.csproj
    ```
+
 
 2. Open the monitoring interface in your browser:
 
